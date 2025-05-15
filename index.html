@@ -1,0 +1,258 @@
+import React, { useState, useEffect } from "react";
+
+const sampleData = [
+  "Apple",
+  "Banana",
+  "Orange",
+  "Pineapple",
+  "Mango",
+  "Strawberry",
+  "Blueberry",
+  "Watermelon",
+  "Kiwi",
+  "Lemon",
+  "Cherry",
+  "Grapes",
+  "Peach",
+  "Pear",
+];
+
+const Bubble = ({ x, y, size, delay, hovered }) => {
+  const style = {
+    position: "absolute",
+    left: x,
+    top: y,
+    width: size,
+    height: size,
+    background: hovered ? "rgba(0, 255, 191, 0.6)" : "rgba(0, 255, 191, 0.3)",
+    borderRadius: "50%",
+    animation: `bubblePulse 4s ease-in-out ${delay}s infinite alternate`,
+    filter: hovered
+      ? "drop-shadow(0 0 10px rgba(0, 255, 191,0.9))"
+      : "drop-shadow(0 0 6px rgba(0, 255, 191,0.7))",
+    pointerEvents: "none",
+    zIndex: 0,
+    transition: "background 0.3s, filter 0.3s",
+  };
+  return <div style={style}></div>;
+};
+
+const App = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [filteredResults, setFilteredResults] = useState(sampleData);
+  const [bubbles, setBubbles] = useState([]);
+  const [hoveredResultIndex, setHoveredResultIndex] = useState(null);
+  const [selectedResult, setSelectedResult] = useState(null);
+
+  // Debounce the search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer); // Cleanup on every change
+  }, [searchTerm]);
+
+  // Filter results based on debounced search term
+  useEffect(() => {
+    if (!debouncedSearchTerm) {
+      setFilteredResults(sampleData);
+    } else {
+      const filtered = sampleData.filter((item) =>
+        item.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      );
+      setFilteredResults(filtered);
+    }
+  }, [debouncedSearchTerm]);
+
+  useEffect(() => {
+    const newBubbles = [];
+    const bubbleCount = 15;
+    for (let i = 0; i < bubbleCount; i++) {
+      newBubbles.push({
+        x: `${Math.random() * 90 + 5}%`,
+        y: `${Math.random() * 80 + 10}%`,
+        size: `${Math.random() * 50 + 25}px`,
+        delay: Math.random() * 3,
+      });
+    }
+    setBubbles(newBubbles);
+  }, []);
+
+  const containerStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    height: "100vh",
+    background: "linear-gradient(135deg, #0f4c5c, #00c6ff)",
+    color: "#e0f7fa",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    paddingTop: "5rem",
+    position: "relative",
+    overflow: "hidden",
+  };
+
+  const titleStyle = {
+    fontSize: "3rem",
+    fontWeight: "900",
+    marginBottom: "1.8rem",
+    textShadow: "0 0 15px #00ffe3",
+    letterSpacing: "0.05em",
+  };
+
+  const inputStyle = {
+    padding: "0.85rem 1.8rem",
+    borderRadius: "2rem",
+    border: "none",
+    width: "380px",
+    fontSize: "1.3rem",
+    outline: "none",
+    boxShadow: "0 0 18px rgba(0, 255, 191, 0.9)",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    color: "#e0f7fa",
+    marginBottom: "3rem",
+    transition: "box-shadow 0.3s ease",
+  };
+
+  const resultsStyle = {
+    backgroundColor: "rgba(255, 255, 255, 0.18)",
+    borderRadius: "1.5rem",
+    width: "400px",
+    padding: "1.2rem 2rem",
+    maxHeight: "350px",
+    overflowY: "auto",
+    boxShadow: "0 0 25px rgba(0, 255, 191, 0.9)",
+    zIndex: 1,
+  };
+
+  const resultItemStyle = (isHovered, isSelected) => ({
+    padding: "0.65rem 1rem",
+    borderBottom: "1px solid rgba(224, 247, 250, 0.33)",
+    cursor: "pointer",
+    fontSize: "1.2rem",
+    borderRadius: "12px",
+    backgroundColor: isSelected
+      ? "rgba(0, 255, 191, 0.6)"
+      : isHovered
+      ? "rgba(0, 255, 191, 0.33)"
+      : "transparent",
+    color: "#004d40",
+    fontWeight: isSelected ? "700" : "500",
+    transition: "background-color 0.25s ease, color 0.25s ease",
+    userSelect: "none",
+  });
+
+  const infoBoxStyle = {
+    marginTop: "2rem",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    padding: "1rem 1.5rem",
+    borderRadius: "1rem",
+    width: "400px",
+    textAlign: "center",
+    color: "#b2ebf2",
+    boxShadow: "0 0 18px rgba(0, 255, 191, 0.8)",
+    userSelect: "none",
+  };
+
+  return (
+    <div style={containerStyle}>
+      <h1 style={titleStyle}>Blue-Green Bubble Search</h1>
+      <input
+        style={inputStyle}
+        type="search"
+        placeholder="Search fruits..."
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setSelectedResult(null); // reset selection on new search
+        }}
+      />
+      <div style={resultsStyle}>
+        {filteredResults.length > 0 ? (
+          filteredResults.map((item, index) => (
+            <div
+              key={index}
+              style={resultItemStyle(
+                hoveredResultIndex === index,
+                selectedResult === item
+              )}
+              onMouseEnter={() => setHoveredResultIndex(index)}
+              onMouseLeave={() => setHoveredResultIndex(null)}
+              onClick={() => setSelectedResult(item)}
+            >
+              {item}
+            </div>
+          ))
+        ) : (
+          <p style={{ fontStyle: "italic", textAlign: "center" }}>
+            No results found.
+          </p>
+        )}
+      </div>
+
+      {selectedResult && (
+        <div style={infoBoxStyle}>
+          <h2>{selectedResult}</h2>
+          <p>
+            You selected <strong>{selectedResult}</strong>. This is a sample
+            interactive search engine showcasing React, dynamic filtering, and
+            cool bubble visuals.
+          </p>
+        </div>
+      )}
+
+      {/* Bubbles */}
+      {bubbles.map((bub, i) => (
+        <Bubble
+          key={i}
+          x={bub.x}
+          y={bub.y}
+          size={bub.size}
+          delay={bub.delay}
+          hovered={hoveredResultIndex === i}
+        />
+      ))}
+
+      <style>
+        {`
+          @keyframes bubblePulse {
+            0% {
+              transform: scale(1);
+              opacity: 0.6;
+            }
+            100% {
+              transform: scale(1.4);
+              opacity: 0.25;
+            }
+          }
+          ::-webkit-scrollbar {
+            width: 10px;
+          }
+          ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 255, 191, 0.45);
+            border-radius: 20px;
+          }
+          /* Media query for mobile responsiveness */
+          @media (max-width: 600px) {
+            .containerStyle {
+              padding-top: 2rem;
+            }
+            .inputStyle {
+              width: 90%;
+              font-size: 1.1rem;
+            }
+            .resultsStyle {
+              width: 90%;
+            }
+          }
+        `}
+      </style>
+    </div>
+  );
+};
+
+export default App;
